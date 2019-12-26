@@ -24,7 +24,7 @@
         chain: INPUT
         jump: ACCEPT
         action: insert
-        rule_num: 0
+        rule_num: 1
 
 
     - name: Insert a rule on line 5
@@ -32,7 +32,7 @@
         chain: FORWARD
         jump: ACCEPT
         action: insert
-        rule_num: 1
+        rule_num: 2
 
     
     - name: install the package, force upgrade
