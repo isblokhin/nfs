@@ -1,0 +1,142 @@
+---
+  
+  - name: install postfix and dovecot
+    hosts: nfss
+    gather_facts: yes
+    remote_user: vagrant
+    become: true
+   
+    tasks:
+    - name: install packages
+      include_vars: vars.yml
+    - name: install packages
+      yum: 
+        name: "{{ packages }}"
+        state: present
+      notify: 
+      - nfs-server enable
+      - rpcbind enable
+      - nfs-server start
+      - rpcbind start
+
+    - name: Insert a rule on line 5
+      iptables:
+        chain: INPUT
+        jump: ACCEPT
+        action: insert
+        rule_num: 0
+
+
+    - name: Insert a rule on line 5
+      iptables:
+        chain: FORWARD
+        jump: ACCEPT
+        action: insert
+        rule_num: 1
+
+    
+    - name: install the package, force upgrade
+      pip: 
+        name: pip
+        extra_args: --upgrade
+
+#    - name: install the package, force upgrade
+#      pip:
+#        name: setuptools
+#        extra_args: --upgrade
+   
+
+#    - name: install pip infinisdk
+#      pip:
+#        name: infinisdk
+#        state: present
+ 
+    - name: enable ntpd
+      systemd:
+        name: ntpd
+        enabled: true
+      notify: ntpd restart
+
+    - name: set timezone
+      timezone:
+        name: Europe/Moscow
+
+    - name: insert name hosts
+      lineinfile:
+        path: /etc/hosts
+        line: 10.0.0.2 nfsc
+        state: present
+
+    - name: create /nfs/upload
+      file:
+        path: /nfs/upload
+        state: directory
+        owner: root
+        group: root
+        
+     
+#    - name: export file setting
+#      infini_export:
+#        name: /nfs/upload
+#        filesystem: xfs
+#        client_list:
+#          - client: 10.0.0.2
+#            access: RW
+#            no_root_squash: false
+#        system: 10.0.0.1
+#        user: root
+#        password: vagrant
+#      notify: nfs-server restart
+  
+    - name: install /etc/exports
+      ignore_errors: true
+      shell: echo "/mnt 10.0.0.2 (rw, sync, root_squash,no_subtree_check,crossmnt,fsid=0)" >> /etc/exports
+      notify: nfs-server restart
+
+    handlers:
+    - include: hand.yml
+
+       
+
+  - hosts: nfsc
+    become: yes
+    tasks:
+    - name: include default step variables
+      include_vars: vars.yml
+
+    - name: install packages
+      yum:
+        name: "{{ clientpackages }}"
+        state: present
+      notify:
+      - nfs-server start
+      - nfs-server enable
+      - rpcbind start
+      - rpcbind enable
+
+
+   
+    - name: insert name hosts
+      lineinfile:
+        path: /etc/hosts
+        line: 10.0.0.1 nfss
+        state: present
+    
+    - name: mount dir from server
+      mount:
+        path: /mnt
+        src: 10.0.0.1:/mnt/upload
+        fstype: xfs
+        state: present
+
+
+    handlers:
+    - include: hand.yml
+
+    
+    - name: install /etc/exports
+      ignore_errors: true
+      shell: mount -o udp 10.0.0.1:/mnt /mnt
+    
+
+...

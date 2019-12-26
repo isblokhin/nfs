@@ -1,0 +1,30 @@
+--- 
+  - name: nfs-server start
+    systemd:
+      name: nfs-server
+      state: started
+  - name: rpcbind start
+    systemd:
+      name: rpcbind
+      state: started
+  - name: nfs-server enable
+    systemd:
+      name: nfs-server
+      enabled: yes
+  - name: rpcbind enable
+    systemd:
+      name: rpcbind
+      enabled: yes
+  - name: ntpd restart
+    systemd:
+      name: ntpd
+      state: restarted
+
+  - name: nfs-server restart
+    systemd:
+      name: nfs-server
+      state: restarted 
+
+
+...
+
