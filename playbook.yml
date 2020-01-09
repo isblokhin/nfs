@@ -19,20 +19,20 @@
       - nfs-server start
       - rpcbind start
 
-    - name: Insert a rule on line 5
-      iptables:
-        chain: INPUT
-        jump: ACCEPT
-        action: insert
-        rule_num: 1
+#    - name: Insert a rule on line 5
+#      iptables:
+#        chain: INPUT
+#        jump: ACCEPT
+#        action: insert
+#        rule_num: 1
 
 
-    - name: Insert a rule on line 5
-      iptables:
-        chain: FORWARD
-        jump: ACCEPT
-        action: insert
-        rule_num: 2
+#    - name: Insert a rule on line 5
+#      iptables:
+#        chain: FORWARD
+#        jump: ACCEPT
+#        action: insert
+#        rule_num: 2
 
     
     - name: install the package, force upgrade
@@ -88,10 +88,17 @@
 #        password: vagrant
 #      notify: nfs-server restart
   
-    - name: install /etc/exports
-      ignore_errors: true
-      shell: echo "/mnt 10.0.0.2 (rw, sync, root_squash,no_subtree_check,crossmnt,fsid=0)" >> /etc/exports
+#    - name: install /etc/exports
+#      ignore_errors: true
+#      shell: echo "/mnt 10.0.0.2 (rw, sync, root_squash,no_subtree_check,crossmnt,fsid=0)" >> /etc/exports
+#      notify: nfs-server restart
+    - name: insert config export 
+      lineinfile:
+        path: /etc/exports
+        line: /mnt 10.0.0.2 (rw, sync, root_squash,no_subtree_check,crossmnt,fsid=0)
+        state: present
       notify: nfs-server restart
+
 
     handlers:
     - include: hand.yml
@@ -136,7 +143,7 @@
     
     - name: install /etc/exports
       ignore_errors: true
-      shell: mount -o udp 10.0.0.1:/mnt /mnt
+      shell: mount -t nfs nfsvers=3 -o udp 10.0.0.1:/mnt /mnt
     
 
 ...
