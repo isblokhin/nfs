@@ -158,6 +158,7 @@
     - name: install /etc/exports
       ignore_errors: true
       shell: sudo mount -a
+
 #      shell: mount -t nfs nfsvers=3 -o udp 10.0.0.1:/mnt/upload /mnt
     
 
