@@ -18,6 +18,20 @@
       - rpcbind enable
       - nfs-server start
       - rpcbind start
+      - firewalld enable
+      - firewalld start
+
+    - name: insert config export
+      lineinfile:
+        path: /etc/exports
+        line: /mnt/upload 10.0.0.2(rw,sync,root_squash,no_subtree_check,crossmnt,fsid=0)
+        state: present
+      notify: nfs-server restart
+
+    handlers:
+    - include: hand.yml
+
+
 
 #    - name: Insert a rule on line 5
 #      iptables:
@@ -33,6 +47,11 @@
 #        jump: ACCEPT
 #        action: insert
 #        rule_num: 2
+
+    - firewalld:
+        service: nfs3
+        permanent: yes
+        state: enabled
 
     
     - name: install the package, force upgrade
@@ -57,6 +76,10 @@
         enabled: true
       notify: ntpd restart
 
+
+    handlers:
+    - include: hand.yml
+
     - name: set timezone
       timezone:
         name: Europe/Moscow
@@ -67,13 +90,13 @@
         line: 10.0.0.2 nfsc
         state: present
 
-    - name: create /nfs/upload
+    - name: create /mnt/upload
       file:
-        path: /nfs/upload
+        path: /mnt/upload
         state: directory
         owner: root
         group: root
-        
+        mode: '0755'
      
 #    - name: export file setting
 #      infini_export:
@@ -92,17 +115,7 @@
 #      ignore_errors: true
 #      shell: echo "/mnt 10.0.0.2 (rw, sync, root_squash,no_subtree_check,crossmnt,fsid=0)" >> /etc/exports
 #      notify: nfs-server restart
-    - name: insert config export 
-      lineinfile:
-        path: /etc/exports
-        line: /mnt 10.0.0.2 (rw, sync, root_squash,no_subtree_check,crossmnt,fsid=0)
-        state: present
-      notify: nfs-server restart
-
-
-    handlers:
-    - include: hand.yml
-
+      
        
 
   - hosts: nfsc
@@ -120,7 +133,7 @@
       - nfs-server enable
       - rpcbind start
       - rpcbind enable
-
+    
 
    
     - name: insert name hosts
@@ -133,7 +146,8 @@
       mount:
         path: /mnt
         src: 10.0.0.1:/mnt/upload
-        fstype: xfs
+        fstype: nfs
+        opts: nfsvers=3,rw,noauto,nolock,udp
         state: present
 
 
@@ -143,7 +157,8 @@
     
     - name: install /etc/exports
       ignore_errors: true
-      shell: mount -t nfs nfsvers=3 -o udp 10.0.0.1:/mnt /mnt
+      shell: sudo mount -a
+#      shell: mount -t nfs nfsvers=3 -o udp 10.0.0.1:/mnt/upload /mnt
     
 
 ...
