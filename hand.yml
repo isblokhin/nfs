@@ -25,6 +25,15 @@
       name: nfs-server
       state: restarted 
 
+  - name: firewalld start
+    systemd:
+      name: firewalld
+      state: started
+
+  - name: firewall enable
+    systemd:
+      name: firewalld
+      enabled: yes
 
 ...
 
